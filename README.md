@@ -111,9 +111,9 @@ PS> Find-PSRemotingLocalAdminAccess
 #if you attempted to use any script ex. AMSI bypass you will get "Cannot invoke method. Method invocation is supported on core type in this language mode" error
 PS> $ExecutionContext.SessionState.LanguageMode  #Check language mode
 Get-AppLockerPolicy -Effective | select -ExpandProperty RuleCollections  #list app locker policy
-
-![image](https://github.com/user-attachments/assets/1b1add80-26ac-4bd2-97ca-025bc0820117)
-
+```
+[image](https://github.com/user-attachments/assets/1b1add80-26ac-4bd2-97ca-025bc0820117)
+```powershell
 1-  Rule No.1 Allow every user to run all scripts located in the program files folder
 2-  Rule No.2 Allow every user to run all scripts located in the windows32 folder
 ```
