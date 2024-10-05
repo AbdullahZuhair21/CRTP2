@@ -112,7 +112,8 @@ PS> Find-PSRemotingLocalAdminAccess
 PS> $ExecutionContext.SessionState.LanguageMode  #Check language mode
 Get-AppLockerPolicy -Effective | select -ExpandProperty RuleCollections  #list app locker policy
 ```
-[image](https://github.com/user-attachments/assets/1b1add80-26ac-4bd2-97ca-025bc0820117)
+![image](https://github.com/user-attachments/assets/a073bfb1-dd42-4dd1-829c-650b384c942a)
+
 ```powershell
 1-  Rule No.1 Allow every user to run all scripts located in the program files folder
 2-  Rule No.2 Allow every user to run all scripts located in the windows32 folder
