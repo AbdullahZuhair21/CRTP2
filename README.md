@@ -309,7 +309,7 @@ john.exe--wordlist=C:\AD\Tools\kerberoast\10k-worst-pass.txt C:\AD\Tools\targete
 ```
 
 Unconstrained Delegation
-```pwoershell
+```powershell
 #Unconstrained delegation in Active Directory is a feature that allows a server or service to impersonate users across the entire network after they have authenticated to that server. Essentially, if a user authenticates to a machine with unconstrained delegation enabled, that machine can act on behalf of that user and access other services as if it were the user.
 
 #1- Enum computers & Users which have unconstrained delegation enabled
