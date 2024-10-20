@@ -1,4 +1,17 @@
 # CRTP
+# Enumuration
+```powershell
+# Find the groups the user belongs to
+Get-DomainUser -Identity Administrator -Properties MemberOf | Select-Object -ExpandProperty MemberOf
+Get-DomainGroupMember -Identity "Group_Name"
+
+# Find the groups the computer belongs to
+Get-DomainComputer -Identity "dcorp-dc.dollarcorp.moneycorp.local"   #check distinguishedname for the OU. check primarygroupid for the Group
+get-domaingroup | select name, objectsid   #Match the SID from the previous step with this to get the group name
+```
+
+
+
 # CMD & PS 
 ```powershell
 # Use Invishell
