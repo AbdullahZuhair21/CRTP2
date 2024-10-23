@@ -1,4 +1,9 @@
 # CRTP
+
+Attacking path: 
+1- privesc -> local admin access on other PC
+2- revshell on junkings -> check sessions on other pc -> extract creds.
+
 # Enumuration
 ```powershell
 # Find the groups the user belongs to
@@ -9,6 +14,7 @@ Get-DomainGroupMember -Identity "Group_Name"
 Get-DomainComputer -Identity "dcorp-dc.dollarcorp.moneycorp.local"   #check distinguishedname for the OU. check primarygroupid for the Group
 get-domaingroup | select name, objectsid   #Match the SID from the previous step with this to get the group name
 ```
+
 
 
 
