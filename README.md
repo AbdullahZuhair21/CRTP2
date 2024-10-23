@@ -50,6 +50,7 @@ Invoke-ServiceAbuse -Name 'AbyssWebServer' -UserName 'dcorp\studentx' -Verbose  
 Find-PSRemotingLocalAdminAccess
 
 #you can connect to the other computer using the following command
+ENTER-PSSession -ComputerName dcorp-adminsrv
 winrs -r:dcorp-adminsrv cmd
 set username
 set computername
